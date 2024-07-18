@@ -25,60 +25,65 @@ import com.bhargav.ipldashboard.model.Match;
 @EnableBatchProcessing
 public class BatchConfig {
 
-    private final String[] FIELD_NAMES = new String[] { "id", "city", "date", "player_of_match", "venue",
-            "neutral_venue", "team1", "team2", "toss_winner", "toss_decision", "winner", "result", "result_margin",
-            "eliminator", "method", "umpire1", "umpire2" };
+	// Define the field names that correspond to columns in the CSV file
+	private final String[] FIELD_NAMES = new String[] { "id", "city", "date", "player_of_match", "venue",
+			"neutral_venue", "team1", "team2", "toss_winner", "toss_decision", "winner", "result", "result_margin",
+			"eliminator", "method", "umpire1", "umpire2" };
 
-    @Autowired
-    public JobBuilderFactory jobBuilderFactory;
+	// Autowire the JobBuilderFactory to create jobs
+	@Autowired
+	public JobBuilderFactory jobBuilderFactory;
 
-    @Autowired
-    public StepBuilderFactory stepBuilderFactory;
+	// Autowire the StepBuilderFactory to create steps
+	@Autowired
+	public StepBuilderFactory stepBuilderFactory;
 
-    @Bean
-    public FlatFileItemReader<MatchInput> reader() {
-        return new FlatFileItemReaderBuilder<MatchInput>().name("MatchItemReader")
-                .resource(new ClassPathResource("match-data.csv")).delimited().names(FIELD_NAMES)
-                .fieldSetMapper(new BeanWrapperFieldSetMapper<MatchInput>() {
-                    {
-                        setTargetType(MatchInput.class);
-                    }
-                }).build();
-    }
+	// Define a FlatFileItemReader bean to read data from the CSV file
+	@Bean
+	public FlatFileItemReader<MatchInput> reader() {
+		return new FlatFileItemReaderBuilder<MatchInput>().name("MatchItemReader")
+				.resource(new ClassPathResource("match-data.csv")) // Specify the CSV file location
+				.delimited().names(FIELD_NAMES) // Map the fields to the column names
+				.fieldSetMapper(new BeanWrapperFieldSetMapper<MatchInput>() {
+					{
+						setTargetType(MatchInput.class); // Set the target type to MatchInput
+					}
+				}).build();
+	}
 
-    @Bean
-    public MatchDataProcessor processor() {
-        return new MatchDataProcessor();
-    }
+	// Define a processor bean to process the data read from the CSV file
+	@Bean
+	public MatchDataProcessor processor() {
+		return new MatchDataProcessor();
+	}
 
-    @Bean
-    public JdbcBatchItemWriter<Match> writer(DataSource dataSource) {
-        return new JdbcBatchItemWriterBuilder<Match>()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO match (id, city, date, player_of_match, venue, team1, team2, toss_winner, toss_decision, match_winner, result, result_margin, umpire1, umpire2) "
-                        + " VALUES (:id, :city, :date, :playerOfMatch, :venue, :team1, :team2, :tossWinner, :tossDecision, :matchWinner, :result, :resultMargin, :umpire1, :umpire2)")
-                .dataSource(dataSource).build();
-    }
+	// Define a JdbcBatchItemWriter bean to write data to the database
+	@Bean
+	public JdbcBatchItemWriter<Match> writer(DataSource dataSource) {
+		return new JdbcBatchItemWriterBuilder<Match>()
+				.itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
+				.sql("INSERT INTO match (id, city, date, player_of_match, venue, team1, team2, toss_winner, toss_decision, match_winner, result, result_margin, umpire1, umpire2) "
+						+ " VALUES (:id, :city, :date, :playerOfMatch, :venue, :team1, :team2, :tossWinner, :tossDecision, :matchWinner, :result, :resultMargin, :umpire1, :umpire2)")
+				.dataSource(dataSource).build();
+	}
 
-    @Bean
-    public Job importUserJob(JobCompletionNotificationListener listener, Step step1) {
-        return jobBuilderFactory
-            .get("importUserJob")
-            .incrementer(new RunIdIncrementer())
-            .listener(listener)
-            .flow(step1)
-            .end()
-            .build();
-    }
+	// Define a Job bean to encapsulate the entire batch job
+	@Bean
+	public Job importUserJob(JobCompletionNotificationListener listener, Step step1) {
+		return jobBuilderFactory.get("importUserJob").incrementer(new RunIdIncrementer()) // Incrementer to handle job
+																							// restarts
+				.listener(listener) // Add a job listener for notification upon completion
+				.flow(step1) // Define the flow of the job starting with step1
+				.end().build();
+	}
 
-    @Bean
-    public Step step1(JdbcBatchItemWriter<Match> writer) {
-        return stepBuilderFactory
-            .get("step1")
-            .<MatchInput, Match>chunk(10)
-            .reader(reader())
-            .processor(processor())
-            .writer(writer)
-            .build();
-    }
+	// Define a Step bean to encapsulate a step in the batch job
+	@Bean
+	public Step step1(JdbcBatchItemWriter<Match> writer) {
+		return stepBuilderFactory.get("step1").<MatchInput, Match>chunk(10) // Define the chunk size for processing
+				.reader(reader()) // Set the reader to read data from the CSV file
+				.processor(processor()) // Set the processor to process the data
+				.writer(writer) // Set the writer to write data to the database
+				.build();
+	}
 }
