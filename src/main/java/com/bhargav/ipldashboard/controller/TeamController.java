@@ -1,8 +1,11 @@
 package com.bhargav.ipldashboard.controller;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
+//import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Sort;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +32,9 @@ public class TeamController {
 
     @GetMapping("/team")
     public Iterable<Team> getAllTeam() {
-        return this.teamRepository.findAll();
+        List<Team> teams = teamRepository.findAll();
+        Collections.sort(teams, Comparator.comparing(Team::getTeamName));
+        return teams;
     }
 
     @GetMapping("/team/{teamName}")
