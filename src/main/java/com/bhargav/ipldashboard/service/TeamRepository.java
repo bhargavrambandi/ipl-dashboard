@@ -10,7 +10,11 @@ public interface TeamRepository extends CrudRepository<Team, Long>  {
 
     Team findByTeamName(String teamName);
     
+<<<<<<< Updated upstream
      List<Team> findAll();
 
     
+=======
+    List<Team> findAll();
+>>>>>>> Stashed changes
 }
