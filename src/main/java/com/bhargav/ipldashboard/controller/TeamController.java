@@ -4,6 +4,9 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
+
 
 //import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties.Sort;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,25 +26,33 @@ public class TeamController {
 
     private TeamRepository teamRepository;
     private MatchRepository matchRepository;
-    
+
     public TeamController(TeamRepository teamRepository, MatchRepository matchRepository) {
         this.teamRepository = teamRepository;
         this.matchRepository = matchRepository;
     }
 
-
     @GetMapping("/team")
+<<<<<<< Updated upstream
     public Iterable<Team> getAllTeam() {
         List<Team> teams = teamRepository.findAll();
         Collections.sort(teams, Comparator.comparing(Team::getTeamName));
         return teams;
+=======
+    public List<Team> getAllTeam() {
+
+        List<Team> teams = teamRepository.findAll();
+        Collections.sort(teams, Comparator.comparing(Team::getTeamName));
+        return teams;
+
+>>>>>>> Stashed changes
     }
 
     @GetMapping("/team/{teamName}")
     public Team getTeam(@PathVariable String teamName) {
         Team team = this.teamRepository.findByTeamName(teamName);
-        team.setMatches(matchRepository.findLatestMatchesbyTeam(teamName,4));
-            
+        team.setMatches(matchRepository.findLatestMatchesbyTeam(teamName, 4));
+
         return team;
     }
 
@@ -50,10 +61,9 @@ public class TeamController {
         LocalDate startDate = LocalDate.of(year, 1, 1);
         LocalDate endDate = LocalDate.of(year + 1, 1, 1);
         return this.matchRepository.getMatchesByTeamBetweenDates(
-            teamName,
-            startDate,
-            endDate
-            );
+                teamName,
+                startDate,
+                endDate);
     }
 
-}    
+}
